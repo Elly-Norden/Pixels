@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Pixel Game</title>
+    <script>
+
+        let pixel = {
+            location: [0, 0],
+            generatePixel: function (field) {
+                let axeX, axeY;
+
+                do {
+                    axeX = Math.floor(Math.random() * field.offsetWidth);
+                } while (axeX < 15 || axeX > field.offsetWidth - 4);
+
+                do {
+                    axeY = Math.floor(Math.random() * field.offsetHeight);
+                } while (axeY < 15 || axeY > field.offsetHeight - 4);
+
+                let newLocation = [];
+                newLocation.push(axeX);
+                newLocation.push(axeY);
+
+                this.location = newLocation;
+            }
+        }
+
+        window.onload = init;
+
+        function init() {
+            document.body.style.background = "black";
+            let playground = document.getElementById("playground");
+            playground.style.width = '65vw';
+            playground.style.height = '45vw';
+            playground.onmousemove = showCoords;
+
+            pixel.generatePixel(playground);
+            let tp = createPixelObject(pixel.location[0], pixel.location[1]);
+        }
+
+        function showCoords(eventObj) {
+            let info = document.getElementById("coords");
+            let playground = document.getElementById("playground");
+            let x = eventObj.pageX;
+            let y = eventObj.pageY;
+
+            let d = calculateDistance(pixel, x, y);
+
+            let colorCode = defineColorTrace(playground,d);
+
+            createPixelObject(x, y, {
+                    left: x + "px",
+                    top: y + "px",
+                    position: "absolute",
+                    width: "2px",
+                    height: "2px",
+                    background: `hsl(${colorCode},100%,60%)`,
+                    boxShadow: `0px 0px 40px 5px hsl(${colorCode},100%,60%)`,
+                });
+
+            info.innerHTML = "Coordinates: "
+                + x + ", " + y;
+        }
+
+        function createPixelObject(coordinateX, coordinateY, style = {}) {
+                let pixelObject = document.createElement("div");
+
+                // pixelObject.style.position = "absolute";
+                // pixelObject.style.width = "5px";
+                // pixelObject.style.height = "5px";
+                // pixelObject.style.left = coordinateX + "px";
+                // pixelObject.style.top = coordinateY + "px";
+                // pixelObject.style.background = "#ff0000";
+                // pixelObject.style.boxShadow = "0px 0px 20px 10px #ff0000";
+
+                Object.assign(pixelObject.style, style);
+
+                playground.appendChild(pixelObject);
+
+                return pixelObject;
+            }
+
+        function calculateDistance(targetPixel, currentPixelX, currentPixelY) {
+            //d= sqr((x2-x1)^2 + (y2-y1)^2)
+
+            let diff1 = ~~currentPixelX-~~targetPixel.location[0];
+            let diff2 = ~~currentPixelY-~~targetPixel.location[1];
+
+            let d = Math.sqrt(Math.pow(diff1,2) + Math.pow(diff2,2));
+
+            return d;
+        }
+
+        function defineColorTrace(field, distance) {
+            // define a farest point first, one of the edges
+
+            let maxX = ~~field.offsetWidth+8;
+            let maxY = ~~field.offsetHeight+8;
+            let minX = 8;
+            let minY = 8;
+
+            let dFirstCorner = calculateDistance(pixel, minX, minY);
+            let dSecondCorner = calculateDistance(pixel, minX, maxY);
+            let dThirdCorner = calculateDistance(pixel, maxX, minY);
+            let dForthCorner = calculateDistance(pixel, maxX, maxY);
+
+            let maxDistance = Math.max(dFirstCorner, dSecondCorner, dThirdCorner, dForthCorner);
+
+            // normalize distance to maxDistance and convert to a number between 0 and 360 for hsl color code
+
+            let normDistance = distance/maxDistance * 100;
+            let hslColor = normDistance / (100/280);
+
+            return hslColor;
+        }
+
+    </script>
+</head>
+
+<body>
+    <div id="playground" style="border: solid 1px #444344;"></div>
+    <span id="coords">Move the mouse to find a pixel</span>
+</body>
+
+</html>
